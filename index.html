@@ -1,645 +1,298 @@
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Chat</title>
 
-    <title>Global Chat</title>
+<style>
+*{box-sizing:border-box}
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+body{
+    margin:0;
+    background:#111;
+    color:#fff;
+    font-family:Arial,sans-serif;
+}
 
-        body {
-            margin: 0;
-            background: #0d1117;
-            color: white;
-            font-family: Arial, sans-serif;
-            height: 100vh;
-            overflow: hidden;
-        }
+.app{
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
 
-        .app {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+.header{
+    padding:15px 20px;
+    background:#181818;
+    border-bottom:1px solid #333;
+    display:flex;
+    justify-content:space-between;
+}
 
-        /* HEADER */
+.logo{
+    font-size:20px;
+    font-weight:bold;
+}
 
-        .header {
-            height: 65px;
-            background: #161b22;
-            border-bottom: 1px solid #30363d;
-            display: flex;
-            align-items: center;
-            padding: 0 25px;
-        }
+.online{
+    color:#4caf50;
+    font-size:14px;
+}
 
-        .logo {
-            font-size: 22px;
-            font-weight: bold;
-        }
+#messages{
+    flex:1;
+    overflow-y:auto;
+    padding:20px;
+}
 
-        .online {
-            margin-left: 15px;
-            color: #3fb950;
-            font-size: 14px;
-        }
+.message{
+    margin-bottom:12px;
+    max-width:600px;
+}
 
-        /* CHAT */
+.username{
+    color:#888;
+    font-size:12px;
+    margin-bottom:3px;
+}
 
-        #messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 25px;
-        }
+.bubble{
+    display:inline-block;
+    background:#252525;
+    padding:10px 13px;
+    border-radius:10px;
+    word-break:break-word;
+}
 
-        .message {
-            margin-bottom: 15px;
-            max-width: 700px;
-        }
+.my-message{
+    text-align:right;
+    margin-left:auto;
+}
 
-        .username {
-            font-size: 13px;
-            color: #8b949e;
-            margin-bottom: 4px;
-        }
+.my-message .bubble{
+    background:#2563eb;
+}
 
-        .bubble {
-            display: inline-block;
-            background: #21262d;
-            padding: 11px 15px;
-            border-radius: 12px;
-            word-break: break-word;
-        }
+.system{
+    text-align:center;
+    color:#777;
+    font-size:12px;
+    margin:10px;
+}
 
-        .my-message {
-            text-align: right;
-            margin-left: auto;
-        }
+.input-area{
+    padding:12px;
+    background:#181818;
+    display:flex;
+    gap:8px;
+}
 
-        .my-message .bubble {
-            background: #238636;
-        }
+#messageInput{
+    flex:1;
+    padding:12px;
+    border:1px solid #333;
+    border-radius:8px;
+    background:#111;
+    color:#fff;
+    outline:none;
+}
 
-        .system {
-            text-align: center;
-            color: #8b949e;
-            font-size: 13px;
-            margin: 15px;
-        }
+#sendButton{
+    border:0;
+    background:#2563eb;
+    color:white;
+    padding:0 18px;
+    border-radius:8px;
+    cursor:pointer;
+}
 
-        /* INPUT */
+#login{
+    position:fixed;
+    inset:0;
+    background:#111;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:10;
+}
 
-        .input-area {
-            padding: 15px;
-            background: #161b22;
-            border-top: 1px solid #30363d;
-            display: flex;
-            gap: 10px;
-        }
+.login-box{
+    width:320px;
+    padding:25px;
+    background:#181818;
+    border:1px solid #333;
+    border-radius:12px;
+}
 
-        #messageInput {
-            flex: 1;
-            background: #0d1117;
-            border: 1px solid #30363d;
-            color: white;
-            padding: 14px;
-            border-radius: 10px;
-            outline: none;
-            font-size: 15px;
-        }
+.login-box h1{
+    margin-top:0;
+}
 
-        #messageInput:focus {
-            border-color: #58a6ff;
-        }
+.login-box input{
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    background:#111;
+    color:#fff;
+    border:1px solid #333;
+    border-radius:8px;
+    outline:none;
+}
 
-        #sendButton {
-            background: #238636;
-            border: none;
-            color: white;
-            padding: 0 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 15px;
-        }
+.login-box button{
+    width:100%;
+    padding:12px;
+    border:0;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+}
+</style>
 
-        #sendButton:hover {
-            background: #2ea043;
-        }
-
-        /* LOGIN */
-
-        #login {
-            position: fixed;
-            inset: 0;
-            background: #0d1117;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .login-box {
-            width: 350px;
-            background: #161b22;
-            border: 1px solid #30363d;
-            padding: 30px;
-            border-radius: 15px;
-        }
-
-        .login-box h1 {
-            margin-top: 0;
-        }
-
-        .login-box input {
-            width: 100%;
-            padding: 13px;
-            margin: 10px 0;
-            background: #0d1117;
-            border: 1px solid #30363d;
-            color: white;
-            border-radius: 8px;
-            outline: none;
-        }
-
-        .login-box button {
-            width: 100%;
-            padding: 13px;
-            background: #238636;
-            border: none;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 15px;
-        }
-
-        .status {
-            font-size: 13px;
-            color: #8b949e;
-            margin-top: 10px;
-        }
-    </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-
 <div id="login">
-
     <div class="login-box">
-
         <h1>🌎 Global Chat</h1>
-
-        <p>Введите своё имя</p>
-
-        <input
-            id="usernameInput"
-            type="text"
-            maxlength="20"
-            placeholder="Например: Haiinted"
-        >
-
-        <button onclick="joinChat()">
-            Войти в чат
-        </button>
-
-        <div class="status" id="loginStatus"></div>
-
+        <input id="usernameInput" maxlength="20" placeholder="Ваше имя">
+        <button onclick="joinChat()">Войти</button>
+        <div id="loginStatus"></div>
     </div>
-
 </div>
-
-
-<!-- CHAT -->
 
 <div class="app">
 
-    <div class="header">
+```
+<div class="header">
+    <div class="logo">🌎 Global Chat</div>
+    <div class="online" id="connectionStatus">● Подключение...</div>
+</div>
 
-        <div class="logo">
-            🌎 Global Chat
-        </div>
+<div id="messages"></div>
 
-        <div class="online" id="connectionStatus">
-            ● Подключение...
-        </div>
-
-    </div>
-
-
-    <div id="messages"></div>
-
-
-    <form class="input-area" onsubmit="sendMessage(event)">
-
-        <input
-            id="messageInput"
-            type="text"
-            maxlength="500"
-            autocomplete="off"
-            placeholder="Написать сообщение..."
-        >
-
-        <button id="sendButton">
-            Отправить
-        </button>
-
-    </form>
+<form class="input-area" onsubmit="sendMessage(event)">
+    <input id="messageInput" maxlength="500" autocomplete="off" placeholder="Сообщение...">
+    <button id="sendButton">➤</button>
+</form>
+```
 
 </div>
 
-
 <script>
+const CLUSTER_ID="free.blr2";
+const API_KEY="z6wytuVGQjVrMXNRFhqw7OmWppXB0kwq2amiuCmF";
+const ROOM_ID="global-chat";
 
-    /*
-        ============================
-        PIE SOCKET CONFIG
-        ============================
-    */
+let socket=null;
+let username="";
 
-    const CLUSTER_ID = "free.blr2";
+function joinChat(){
+    username=document.getElementById("usernameInput").value.trim();
 
-    const API_KEY = "z6wytuVGQjVrMXNRFhqw7OmWppXB0kwq2amiuCmF";
-
-    // Одна комната для всех пользователей
-    const ROOM_ID = "global-chat";
-
-
-    /*
-        ============================
-        VARIABLES
-        ============================
-    */
-
-    let socket = null;
-
-    let username = "";
-
-
-
-    /*
-        ============================
-        LOGIN
-        ============================
-    */
-
-    function joinChat() {
-
-        const input =
-            document.getElementById("usernameInput");
-
-        username = input.value.trim();
-
-        if (!username) {
-
-            document.getElementById("loginStatus").textContent =
-                "Введите имя";
-
-            return;
-        }
-
-        // Сохраняем имя
-        localStorage.setItem(
-            "globalChatUsername",
-            username
-        );
-
-        // Убираем окно входа
-        document.getElementById("login").style.display =
-            "none";
-
-        connect();
+    if(!username){
+        document.getElementById("loginStatus").textContent="Введите имя";
+        return;
     }
 
+    localStorage.setItem("globalChatUsername",username);
+    document.getElementById("login").style.display="none";
+    connect();
+}
 
+function connect(){
+    const url=`wss://${CLUSTER_ID}.piesocket.com/v3/${ROOM_ID}?api_key=${API_KEY}&notify_self=1`;
 
-    /*
-        ============================
-        CONNECT TO PIESOCKET
-        ============================
-    */
+    socket=new WebSocket(url);
 
-    function connect() {
+    socket.onopen=()=>{
+        document.getElementById("connectionStatus").textContent="● Онлайн";
+        addSystemMessage("Вы вошли в чат");
+    };
 
-        const url =
-            `wss://${CLUSTER_ID}.piesocket.com/v3/${ROOM_ID}?api_key=${API_KEY}&notify_self=1`;
+    socket.onmessage=(event)=>{
+        try{
+            const data=JSON.parse(event.data);
 
-        socket = new WebSocket(url);
-
-
-        /*
-            CONNECTED
-        */
-
-        socket.onopen = function() {
-
-            document.getElementById(
-                "connectionStatus"
-            ).textContent = "● Онлайн";
-
-            document.getElementById(
-                "connectionStatus"
-            ).style.color = "#3fb950";
-
-            addSystemMessage(
-                "Вы подключились к глобальному чату"
-            );
-        };
-
-
-        /*
-            MESSAGE RECEIVED
-        */
-
-        socket.onmessage = function(event) {
-
-            try {
-
-                const data =
-                    JSON.parse(event.data);
-
-                console.log(
-                    "Получено:",
-                    data
-                );
-
-
-                /*
-                    PieSocket может вернуть
-                    служебные сообщения.
-                */
-
-                if (
-                    data.event === "new_message"
-                ) {
-
-                    showMessage(
-                        data.sender,
-                        data.text
-                    );
-
-                }
-
-                else if (
-                    data.event === "new_joining"
-                ) {
-
-                    addSystemMessage(
-                        data.sender +
-                        " вошёл в чат"
-                    );
-
-                }
-
+            if(data.event==="new_message"){
+                showMessage(data.sender,data.text);
             }
 
-            catch (error) {
-
-                console.log(
-                    "Не удалось обработать сообщение:",
-                    event.data
-                );
-
+            if(data.event==="new_joining"){
+                addSystemMessage(data.sender+" вошёл");
             }
+        }catch(e){}
+    };
 
-        };
+    socket.onclose=()=>{
+        document.getElementById("connectionStatus").textContent="● Оффлайн";
+        setTimeout(connect,3000);
+    };
+}
 
+function sendMessage(event){
+    event.preventDefault();
 
-        /*
-            DISCONNECTED
-        */
+    const input=document.getElementById("messageInput");
+    const text=input.value.trim();
 
-        socket.onclose = function() {
+    if(!text)return;
 
-            document.getElementById(
-                "connectionStatus"
-            ).textContent = "● Отключено";
-
-            document.getElementById(
-                "connectionStatus"
-            ).style.color = "#f85149";
-
-            addSystemMessage(
-                "Соединение потеряно. Переподключение..."
-            );
-
-            setTimeout(connect, 3000);
-        };
-
-
-        /*
-            ERROR
-        */
-
-        socket.onerror = function(error) {
-
-            console.log(
-                "WebSocket error:",
-                error
-            );
-
-        };
-
+    if(!socket || socket.readyState!==WebSocket.OPEN){
+        return;
     }
 
+    socket.send(JSON.stringify({
+        event:"new_message",
+        sender:username,
+        text:text
+    }));
 
+    input.value="";
+    input.focus();
+}
 
-    /*
-        ============================
-        SEND MESSAGE
-        ============================
-    */
+function showMessage(sender,text){
+    const container=document.getElementById("messages");
 
-    function sendMessage(event) {
+    const message=document.createElement("div");
+    message.className="message";
 
-        event.preventDefault();
-
-        const input =
-            document.getElementById(
-                "messageInput"
-            );
-
-        const text =
-            input.value.trim();
-
-
-        if (!text)
-            return;
-
-
-        if (
-            !socket ||
-            socket.readyState !== WebSocket.OPEN
-        ) {
-
-            alert(
-                "Нет соединения с сервером"
-            );
-
-            return;
-        }
-
-
-        /*
-            Отправляем JSON
-        */
-
-        socket.send(
-            JSON.stringify({
-
-                event: "new_message",
-
-                sender: username,
-
-                text: text
-
-            })
-        );
-
-
-        input.value = "";
-
-        input.focus();
-
+    if(sender===username){
+        message.classList.add("my-message");
     }
 
+    const name=document.createElement("div");
+    name.className="username";
+    name.textContent=sender;
 
+    const bubble=document.createElement("div");
+    bubble.className="bubble";
+    bubble.textContent=text;
 
-    /*
-        ============================
-        SHOW MESSAGE
-        ============================
-    */
+    message.appendChild(name);
+    message.appendChild(bubble);
+    container.appendChild(message);
 
-    function showMessage(sender, text) {
+    container.scrollTop=container.scrollHeight;
+}
 
-        const container =
-            document.getElementById(
-                "messages"
-            );
+function addSystemMessage(text){
+    const message=document.createElement("div");
+    message.className="system";
+    message.textContent=text;
 
+    document.getElementById("messages").appendChild(message);
+}
 
-        const message =
-            document.createElement(
-                "div"
-            );
+const savedUsername=localStorage.getItem("globalChatUsername");
 
-        message.className =
-            "message";
-
-
-        if (sender === username) {
-
-            message.classList.add(
-                "my-message"
-            );
-
-        }
-
-
-        const name =
-            document.createElement(
-                "div"
-            );
-
-        name.className =
-            "username";
-
-        name.textContent =
-            sender;
-
-
-        const bubble =
-            document.createElement(
-                "div"
-            );
-
-        bubble.className =
-            "bubble";
-
-        // textContent защищает от HTML/JS-инъекций
-        bubble.textContent =
-            text;
-
-
-        message.appendChild(name);
-
-        message.appendChild(bubble);
-
-        container.appendChild(message);
-
-
-        // Прокрутка вниз
-        container.scrollTop =
-            container.scrollHeight;
-
-    }
-
-
-
-    /*
-        ============================
-        SYSTEM MESSAGE
-        ============================
-    */
-
-    function addSystemMessage(text) {
-
-        const container =
-            document.getElementById(
-                "messages"
-            );
-
-
-        const message =
-            document.createElement(
-                "div"
-            );
-
-        message.className =
-            "system";
-
-        message.textContent =
-            text;
-
-
-        container.appendChild(
-            message
-        );
-
-
-        container.scrollTop =
-            container.scrollHeight;
-
-    }
-
-
-
-    /*
-        ============================
-        LOAD SAVED USERNAME
-        ============================
-    */
-
-    const savedUsername =
-        localStorage.getItem(
-            "globalChatUsername"
-        );
-
-
-    if (savedUsername) {
-
-        document.getElementById(
-            "usernameInput"
-        ).value =
-            savedUsername;
-
-    }
-
+if(savedUsername){
+    document.getElementById("usernameInput").value=savedUsername;
+}
 </script>
 
 </body>
