@@ -1,210 +1,421 @@
 <!DOCTYPE html>
 
 <html lang="ru">
+
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+
+>
+
 <title>Global Chat</title>
 
 <style>
-*{box-sizing:border-box}
 
-body{
-    margin:0;
-    background:#111;
-    color:#fff;
-    font-family:Arial,sans-serif;
+* {
+    box-sizing: border-box;
 }
 
-.app{
-    height:100vh;
-    display:flex;
-    flex-direction:column;
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
 }
 
-.header{
-    padding:14px 18px;
-    background:#181818;
-    border-bottom:1px solid #333;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+body {
+    background: #111;
+    color: #fff;
+    font-family: Arial, sans-serif;
 }
 
-.logo{
-    font-size:19px;
-    font-weight:bold;
+.app {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-.online{
-    color:#4caf50;
-    font-size:13px;
+
+/* =========================
+   HEADER
+========================= */
+
+.header {
+    height: 60px;
+    padding: 0 18px;
+
+    background: #181818;
+
+    border-bottom: 1px solid #333;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    flex-shrink: 0;
 }
 
-#messages{
-    flex:1;
-    overflow-y:auto;
-    padding:18px;
+.logo {
+    font-size: 19px;
+    font-weight: bold;
 }
 
-.message{
-    margin-bottom:12px;
-    max-width:600px;
+.online {
+    color: #f85149;
+    font-size: 13px;
 }
 
-.username{
-    color:#888;
-    font-size:12px;
-    margin-bottom:3px;
+
+/* =========================
+   MESSAGES
+========================= */
+
+#messages {
+    flex: 1;
+
+    overflow-y: auto;
+
+    padding: 18px;
+
+    scroll-behavior: smooth;
 }
 
-.user-id{
-    color:#555;
-    font-size:10px;
-    margin-left:5px;
+.message {
+    margin-bottom: 12px;
+
+    max-width: 600px;
 }
 
-.bubble{
-    display:inline-block;
-    background:#252525;
-    padding:10px 13px;
-    border-radius:10px;
-    word-break:break-word;
+.username {
+    color: #888;
+
+    font-size: 12px;
+
+    margin-bottom: 3px;
 }
 
-.my-message{
-    text-align:right;
-    margin-left:auto;
+.user-id {
+    color: #555;
+
+    font-size: 10px;
+
+    margin-left: 5px;
 }
 
-.my-message .bubble{
-    background:#2563eb;
+.bubble {
+    display: inline-block;
+
+    background: #252525;
+
+    padding: 10px 13px;
+
+    border-radius: 10px;
+
+    word-break: break-word;
+
+    white-space: pre-wrap;
+
+    max-width: 100%;
 }
 
-.system{
-    text-align:center;
-    color:#666;
-    font-size:12px;
-    margin:12px;
+.my-message {
+    text-align: right;
+
+    margin-left: auto;
 }
 
-.input-area{
-    padding:10px;
-    background:#181818;
-    display:flex;
-    gap:8px;
-    border-top:1px solid #333;
+.my-message .bubble {
+    background: #2563eb;
 }
 
-#messageInput{
-    flex:1;
-    padding:12px;
-    border:1px solid #333;
-    border-radius:8px;
-    background:#111;
-    color:#fff;
-    outline:none;
+.system {
+    text-align: center;
+
+    color: #666;
+
+    font-size: 12px;
+
+    margin: 12px;
 }
 
-#sendButton{
-    border:0;
-    background:#2563eb;
-    color:white;
-    padding:0 18px;
-    border-radius:8px;
-    cursor:pointer;
+
+/* =========================
+   INPUT
+========================= */
+
+.input-area {
+    padding: 10px;
+
+    background: #181818;
+
+    display: flex;
+
+    gap: 8px;
+
+    border-top: 1px solid #333;
+
+    flex-shrink: 0;
 }
 
-#sendButton:hover{
-    background:#1d4ed8;
+#messageInput {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 12px;
+
+    border: 1px solid #333;
+
+    border-radius: 8px;
+
+    background: #111;
+
+    color: #fff;
+
+    outline: none;
+
+    font-size: 14px;
 }
 
-#login{
-    position:fixed;
-    inset:0;
-    background:#111;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:10;
+#messageInput:focus {
+    border-color: #2563eb;
 }
 
-.login-box{
-    width:320px;
-    padding:25px;
-    background:#181818;
-    border:1px solid #333;
-    border-radius:12px;
+#sendButton {
+    border: 0;
+
+    background: #2563eb;
+
+    color: white;
+
+    padding: 0 18px;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+    font-size: 18px;
 }
 
-.login-box h1{
-    margin-top:0;
+#sendButton:hover {
+    background: #1d4ed8;
 }
 
-.login-box input{
-    width:100%;
-    padding:12px;
-    margin:10px 0;
-    background:#111;
-    color:#fff;
-    border:1px solid #333;
-    border-radius:8px;
-    outline:none;
+
+/* =========================
+   LOGIN
+========================= */
+
+#login {
+    position: fixed;
+
+    inset: 0;
+
+    background: #111;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    z-index: 10;
+
+    padding: 20px;
 }
 
-.login-box button{
-    width:100%;
-    padding:12px;
-    border:0;
-    border-radius:8px;
-    background:#2563eb;
-    color:white;
-    cursor:pointer;
+.login-box {
+    width: 320px;
+
+    max-width: 100%;
+
+    padding: 25px;
+
+    background: #181818;
+
+    border: 1px solid #333;
+
+    border-radius: 12px;
+
+    box-shadow: 0 10px 40px rgba(0,0,0,.4);
 }
 
-#loginStatus{
-    color:#f85149;
-    font-size:12px;
-    margin-top:8px;
+.login-box h1 {
+    margin-top: 0;
+
+    margin-bottom: 20px;
 }
+
+.login-box input {
+    width: 100%;
+
+    padding: 12px;
+
+    margin: 10px 0;
+
+    background: #111;
+
+    color: #fff;
+
+    border: 1px solid #333;
+
+    border-radius: 8px;
+
+    outline: none;
+
+    font-size: 14px;
+}
+
+.login-box input:focus {
+    border-color: #2563eb;
+}
+
+.login-box button {
+    width: 100%;
+
+    padding: 12px;
+
+    border: 0;
+
+    border-radius: 8px;
+
+    background: #2563eb;
+
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 14px;
+}
+
+.login-box button:hover {
+    background: #1d4ed8;
+}
+
+#loginStatus {
+    color: #f85149;
+
+    font-size: 12px;
+
+    margin-top: 8px;
+
+    min-height: 15px;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+
+    .header {
+        height: 55px;
+
+        padding: 0 12px;
+    }
+
+    .logo {
+        font-size: 17px;
+    }
+
+    #messages {
+        padding: 12px;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+
+    .input-area {
+        padding: 8px;
+    }
+
+    #sendButton {
+        padding: 0 15px;
+    }
+
+}
+
 </style>
 
 </head>
 
 <body>
 
+<!-- =========================
+     LOGIN
+========================= -->
+
 <div id="login">
-    <div class="login-box">
-        <h1>Global Chat</h1>
 
 ```
+<div class="login-box">
+
+    <h1>Global Chat</h1>
+
     <input
         id="usernameInput"
         maxlength="20"
         placeholder="Ваше имя"
+        autocomplete="off"
     >
 
-    <button onclick="joinChat()">Войти</button>
+    <button
+        onclick="joinChat()"
+    >
+        Войти
+    </button>
 
     <div id="loginStatus"></div>
+
 </div>
 ```
 
 </div>
+
+<!-- =========================
+     APP
+========================= -->
 
 <div class="app">
 
 ```
+<!-- HEADER -->
+
 <div class="header">
-    <div class="logo">Global Chat</div>
-    <div class="online" id="connectionStatus">
-        ● Подключение...
+
+    <div class="logo">
+        Global Chat
     </div>
+
+    <div
+        class="online"
+        id="connectionStatus"
+    >
+        ● Оффлайн
+    </div>
+
 </div>
+
+
+<!-- MESSAGES -->
 
 <div id="messages"></div>
 
-<form class="input-area" onsubmit="sendMessage(event)">
+
+<!-- INPUT -->
+
+<form
+    class="input-area"
+    onsubmit="sendMessage(event)"
+>
+
     <input
         id="messageInput"
         maxlength="500"
@@ -212,7 +423,13 @@ body{
         placeholder="Сообщение..."
     >
 
-    <button id="sendButton">➤</button>
+    <button
+        id="sendButton"
+        type="submit"
+    >
+        ➤
+    </button>
+
 </form>
 ```
 
@@ -220,199 +437,684 @@ body{
 
 <script>
 
-const CLUSTER_ID = "free.blr2";
-const API_KEY = "z6wytuVGQjVrMXNRFhqw7OmWppXB0kwq2amiuCmF";
-const ROOM_ID = "global-chat";
+
+/* =====================================================
+   НАСТРОЙКИ
+===================================================== */
+
+
+/*
+    Если index.html запускается через твой FastAPI:
+
+        http://IP:8000
+
+    оставляем пустым.
+*/
+
+const SERVER_URL = "";
+
+
+/*
+    Если HTML находится отдельно,
+    например на GitHub Pages,
+    сюда нужно поставить адрес Python-сервера:
+
+    const SERVER_URL = "http://123.123.123.123:8000";
+
+    или:
+
+    const SERVER_URL = "https://your-domain.com";
+*/
+
 
 let socket = null;
+
 let username = "";
+
 let userId = "";
 
-const savedName = localStorage.getItem("globalChatUsername");
-const savedId = localStorage.getItem("globalChatUserId");
+let token = "";
 
-if(savedName && savedId){
+let reconnectTimer = null;
+
+
+/* =====================================================
+   СОХРАНЁННЫЙ АККАУНТ
+===================================================== */
+
+const savedToken =
+    localStorage.getItem(
+        "globalChatToken"
+    );
+
+const savedName =
+    localStorage.getItem(
+        "globalChatUsername"
+    );
+
+const savedId =
+    localStorage.getItem(
+        "globalChatUserId"
+    );
+
+
+/*
+    Если пользователь уже регистрировался,
+    повторно имя спрашивать не будем.
+*/
+
+if (
+    savedToken &&
+    savedName &&
+    savedId
+) {
+
+    token = savedToken;
 
     username = savedName;
+
     userId = savedId;
 
-    document.getElementById("usernameInput").value = username;
-    document.getElementById("usernameInput").disabled = true;
 
-    document.getElementById("login").style.display = "none";
+    document.getElementById(
+        "usernameInput"
+    ).value = username;
+
+
+    document.getElementById(
+        "usernameInput"
+    ).disabled = true;
+
+
+    document.getElementById(
+        "login"
+    ).style.display = "none";
+
 
     loadHistory();
+
     connect();
-}
-
-function createUserId(){
-
-    return "user_" +
-        Date.now().toString(36) +
-        "_" +
-        Math.random().toString(36).substring(2,10);
 
 }
 
-function joinChat(){
+
+/* =====================================================
+   РЕГИСТРАЦИЯ
+===================================================== */
+
+async function joinChat() {
 
     const input =
-        document.getElementById("usernameInput");
+        document.getElementById(
+            "usernameInput"
+        );
+
 
     const name =
         input.value.trim();
 
-    if(!name){
 
-        document.getElementById("loginStatus").textContent =
+    if (!name) {
+
+        document.getElementById(
+            "loginStatus"
+        ).textContent =
             "Введите имя";
 
         return;
+
     }
 
-    username = name;
 
-    userId = createUserId();
+    if (name.length > 20) {
 
-    localStorage.setItem(
-        "globalChatUsername",
-        username
-    );
+        document.getElementById(
+            "loginStatus"
+        ).textContent =
+            "Максимум 20 символов";
 
-    localStorage.setItem(
-        "globalChatUserId",
-        userId
-    );
+        return;
 
-    input.disabled = true;
+    }
 
-    document.getElementById("login").style.display =
-        "none";
 
-    loadHistory();
-    connect();
+    document.getElementById(
+        "loginStatus"
+    ).textContent =
+        "Подключение...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                SERVER_URL + "/register",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        username: name
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (data.error) {
+
+            document.getElementById(
+                "loginStatus"
+            ).textContent =
+                data.error;
+
+            return;
+
+        }
+
+
+        /*
+            Данные выдаёт Python-сервер.
+        */
+
+        username =
+            data.username;
+
+        userId =
+            data.id;
+
+        token =
+            data.token;
+
+
+        /*
+            Сохраняем аккаунт.
+        */
+
+        localStorage.setItem(
+            "globalChatUsername",
+            username
+        );
+
+        localStorage.setItem(
+            "globalChatUserId",
+            userId
+        );
+
+        localStorage.setItem(
+            "globalChatToken",
+            token
+        );
+
+
+        input.disabled = true;
+
+
+        document.getElementById(
+            "login"
+        ).style.display = "none";
+
+
+        /*
+            Загружаем ВСЮ историю
+            с Python-сервера.
+        */
+
+        await loadHistory();
+
+
+        /*
+            Подключаем WebSocket.
+        */
+
+        connect();
+
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+
+        document.getElementById(
+            "loginStatus"
+        ).textContent =
+            "Сервер недоступен";
+
+    }
+
 }
 
-function connect(){
 
-    const url =
-        `wss://${CLUSTER_ID}.piesocket.com/v3/${ROOM_ID}?api_key=${API_KEY}&notify_self=1`;
+/* =====================================================
+   ЗАГРУЗКА ИСТОРИИ
+===================================================== */
 
-    socket = new WebSocket(url);
+async function loadHistory() {
 
-    socket.onopen = function(){
+    try {
 
-        document.getElementById(
-            "connectionStatus"
-        ).textContent = "● Онлайн";
+        const response =
+            await fetch(
+                SERVER_URL + "/history"
+            );
 
-        document.getElementById(
-            "connectionStatus"
-        ).style.color = "#4caf50";
 
-        addSystemMessage(
-            "Вы подключились"
-        );
-    };
+        if (!response.ok) {
 
-    socket.onmessage = function(event){
+            throw new Error(
+                "History error"
+            );
 
-        try{
+        }
 
-            const data =
-                JSON.parse(event.data);
 
-            if(data.event === "new_message"){
+        /*
+            Здесь приходит история
+            ВСЕХ пользователей.
+        */
+
+        const history =
+            await response.json();
+
+
+        const container =
+            document.getElementById(
+                "messages"
+            );
+
+
+        container.innerHTML = "";
+
+
+        /*
+            Показываем все сообщения.
+        */
+
+        history.forEach(
+            function(message) {
 
                 showMessage(
-                    data.sender,
-                    data.text,
-                    data.userId
+                    message.sender,
+                    message.text,
+                    message.userId
                 );
 
-                saveMessage(
-                    data.sender,
-                    data.text,
-                    data.userId
-                );
             }
+        );
 
-            if(data.event === "new_joining"){
 
-                addSystemMessage(
-                    data.sender + " вошёл"
-                );
-            }
+        scrollToBottom();
 
-        }catch(e){}
 
-    };
+    }
+    catch (error) {
 
-    socket.onclose = function(){
+        console.error(
+            "Ошибка истории:",
+            error
+        );
 
-        document.getElementById(
-            "connectionStatus"
-        ).textContent = "● Оффлайн";
-
-        document.getElementById(
-            "connectionStatus"
-        ).style.color = "#f85149";
-
-        setTimeout(connect,3000);
-    };
+    }
 
 }
 
-function sendMessage(event){
+
+/* =====================================================
+   WEBSOCKET
+===================================================== */
+
+function connect() {
+
+    if (!token) {
+
+        return;
+
+    }
+
+
+    /*
+        Не создаём второе соединение.
+    */
+
+    if (
+        socket &&
+        (
+            socket.readyState ===
+            WebSocket.OPEN ||
+
+            socket.readyState ===
+            WebSocket.CONNECTING
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    let wsUrl;
+
+
+    /*
+        Если сайт работает через HTTPS,
+        используем WSS.
+
+        Если через HTTP,
+        используем WS.
+    */
+
+    if (
+        window.location.protocol ===
+        "https:"
+    ) {
+
+        wsUrl =
+            "wss://" +
+            window.location.host +
+            "/ws?token=" +
+            encodeURIComponent(token);
+
+    }
+    else {
+
+        wsUrl =
+            "ws://" +
+            window.location.host +
+            "/ws?token=" +
+            encodeURIComponent(token);
+
+    }
+
+
+    console.log(
+        "WebSocket:",
+        wsUrl
+    );
+
+
+    socket =
+        new WebSocket(wsUrl);
+
+
+    /* =========================
+       CONNECTED
+    ========================= */
+
+    socket.onopen =
+        function() {
+
+            console.log(
+                "WebSocket connected"
+            );
+
+
+            document.getElementById(
+                "connectionStatus"
+            ).textContent =
+                "● Онлайн";
+
+
+            document.getElementById(
+                "connectionStatus"
+            ).style.color =
+                "#4caf50";
+
+
+            addSystemMessage(
+                "Вы подключились"
+            );
+
+        };
+
+
+    /* =========================
+       MESSAGE
+    ========================= */
+
+    socket.onmessage =
+        function(event) {
+
+            try {
+
+                const data =
+                    JSON.parse(
+                        event.data
+                    );
+
+
+                /*
+                    Python отправляет:
+
+                    {
+                        type: "message",
+                        id: ...,
+                        userId: ...,
+                        sender: ...,
+                        text: ...,
+                        time: ...
+                    }
+                */
+
+                if (
+                    data.type ===
+                    "message"
+                ) {
+
+                    showMessage(
+                        data.sender,
+                        data.text,
+                        data.userId
+                    );
+
+                }
+
+
+            }
+            catch (error) {
+
+                console.error(
+                    "Ошибка сообщения:",
+                    error
+                );
+
+            }
+
+        };
+
+
+    /* =========================
+       CLOSED
+    ========================= */
+
+    socket.onclose =
+        function() {
+
+            console.log(
+                "WebSocket closed"
+            );
+
+
+            document.getElementById(
+                "connectionStatus"
+            ).textContent =
+                "● Оффлайн";
+
+
+            document.getElementById(
+                "connectionStatus"
+            ).style.color =
+                "#f85149";
+
+
+            socket = null;
+
+
+            /*
+                Автоматическое
+                переподключение.
+            */
+
+            if (!reconnectTimer) {
+
+                reconnectTimer =
+                    setTimeout(
+                        function() {
+
+                            reconnectTimer =
+                                null;
+
+                            connect();
+
+                        },
+                        3000
+                    );
+
+            }
+
+        };
+
+
+    /* =========================
+       ERROR
+    ========================= */
+
+    socket.onerror =
+        function(error) {
+
+            console.error(
+                "WebSocket error:",
+                error
+            );
+
+        };
+
+}
+
+
+/* =====================================================
+   ОТПРАВКА СООБЩЕНИЯ
+===================================================== */
+
+function sendMessage(event) {
 
     event.preventDefault();
 
+
     const input =
-        document.getElementById("messageInput");
+        document.getElementById(
+            "messageInput"
+        );
+
 
     const text =
         input.value.trim();
 
-    if(!text)
+
+    if (!text) {
+
         return;
 
-    if(
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
-    ){
-        return;
     }
+
+
+    if (text.length > 500) {
+
+        return;
+
+    }
+
+
+    /*
+        Проверяем соединение.
+    */
+
+    if (
+        !socket ||
+        socket.readyState !==
+        WebSocket.OPEN
+    ) {
+
+        addSystemMessage(
+            "Нет соединения с сервером"
+        );
+
+        return;
+
+    }
+
+
+    /*
+        ВАЖНО:
+
+        Отправляем только type + text.
+
+        username и userId НЕ передаём
+        от клиента.
+
+        Python сам определяет пользователя
+        по token.
+    */
 
     socket.send(
         JSON.stringify({
 
-            event:"new_message",
+            type: "message",
 
-            sender:username,
-
-            userId:userId,
-
-            text:text
+            text: text
 
         })
     );
 
+
     input.value = "";
+
     input.focus();
 
 }
 
-function showMessage(sender,text,id){
+
+/* =====================================================
+   ПОКАЗ СООБЩЕНИЯ
+===================================================== */
+
+function showMessage(
+    sender,
+    text,
+    id
+) {
 
     const container =
-        document.getElementById("messages");
+        document.getElementById(
+            "messages"
+        );
+
 
     const message =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
-    message.className = "message";
 
-    if(id === userId){
+    message.className =
+        "message";
+
+
+    /*
+        Если сообщение наше —
+        делаем синюю плашку справа.
+    */
+
+    if (
+        id === userId
+    ) {
 
         message.classList.add(
             "my-message"
@@ -420,134 +1122,191 @@ function showMessage(sender,text,id){
 
     }
 
+
+    /* USERNAME */
+
     const name =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
-    name.className = "username";
 
-    name.textContent = sender;
+    name.className =
+        "username";
+
+
+    name.textContent =
+        sender;
+
+
+    /* USER ID */
 
     const idElement =
-        document.createElement("span");
+        document.createElement(
+            "span"
+        );
 
-    idElement.className = "user-id";
+
+    idElement.className =
+        "user-id";
+
 
     idElement.textContent =
         "#" + id;
 
-    name.appendChild(idElement);
+
+    name.appendChild(
+        idElement
+    );
+
+
+    /* BUBBLE */
 
     const bubble =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
-    bubble.className = "bubble";
 
-    bubble.textContent = text;
+    bubble.className =
+        "bubble";
 
-    message.appendChild(name);
-    message.appendChild(bubble);
 
-    container.appendChild(message);
+    /*
+        textContent защищает от HTML/JS
+        внутри сообщений.
+    */
 
-    container.scrollTop =
-        container.scrollHeight;
+    bubble.textContent =
+        text;
+
+
+    message.appendChild(
+        name
+    );
+
+
+    message.appendChild(
+        bubble
+    );
+
+
+    container.appendChild(
+        message
+    );
+
+
+    scrollToBottom();
+
 }
 
-function addSystemMessage(text){
+
+/* =====================================================
+   SYSTEM MESSAGE
+===================================================== */
+
+function addSystemMessage(text) {
 
     const message =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
-    message.className = "system";
 
-    message.textContent = text;
+    message.className =
+        "system";
+
+
+    message.textContent =
+        text;
+
 
     document.getElementById(
         "messages"
-    ).appendChild(message);
-
-}
-
-function saveMessage(sender,text,id){
-
-    let history =
-        JSON.parse(
-            localStorage.getItem(
-                "globalChatHistory"
-            ) || "[]"
-        );
-
-    const exists =
-        history.some(function(message){
-
-            return (
-                message.sender === sender &&
-                message.text === text &&
-                message.userId === id
-            );
-
-        });
-
-    if(!exists){
-
-        history.push({
-
-            sender:sender,
-
-            text:text,
-
-            userId:id,
-
-            time:Date.now()
-
-        });
-
-    }
-
-    if(history.length > 1000){
-
-        history =
-            history.slice(-1000);
-
-    }
-
-    localStorage.setItem(
-        "globalChatHistory",
-        JSON.stringify(history)
+    ).appendChild(
+        message
     );
 
+
+    scrollToBottom();
+
 }
 
-function loadHistory(){
 
-    const history =
-        JSON.parse(
-            localStorage.getItem(
-                "globalChatHistory"
-            ) || "[]"
-        );
+/* =====================================================
+   SCROLL
+===================================================== */
+
+function scrollToBottom() {
 
     const container =
-        document.getElementById("messages");
-
-    container.innerHTML = "";
-
-    history.forEach(function(message){
-
-        showMessage(
-            message.sender,
-            message.text,
-            message.userId
+        document.getElementById(
+            "messages"
         );
 
-    });
 
     container.scrollTop =
         container.scrollHeight;
 
 }
+
+
+/* =====================================================
+   ENTER
+===================================================== */
+
+document.getElementById(
+    "messageInput"
+).addEventListener(
+    "keydown",
+    function(event) {
+
+        /*
+            Enter отправляет сообщение.
+        */
+
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
+
+            event.preventDefault();
+
+            document.querySelector(
+                ".input-area"
+            ).requestSubmit();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   ENTER В ОКНЕ РЕГИСТРАЦИИ
+===================================================== */
+
+document.getElementById(
+    "usernameInput"
+).addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+            joinChat();
+
+        }
+
+    }
+);
 
 </script>
 
 </body>
+
 </html>
