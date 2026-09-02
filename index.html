@@ -1,19 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Global Chat</title>
 
 <style>
-*{
-    box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
     margin:0;
     background:#111;
-    color:white;
+    color:#fff;
     font-family:Arial,sans-serif;
 }
 
@@ -24,90 +23,87 @@ body{
 }
 
 .header{
-    height:55px;
-    padding:0 18px;
+    padding:15px 20px;
     background:#181818;
     border-bottom:1px solid #333;
     display:flex;
-    align-items:center;
     justify-content:space-between;
 }
 
 .logo{
-    font-size:19px;
+    font-size:20px;
     font-weight:bold;
 }
 
-.status{
-    font-size:13px;
+.online{
     color:#4caf50;
+    font-size:14px;
 }
 
 #messages{
     flex:1;
     overflow-y:auto;
-    padding:18px;
+    padding:20px;
 }
 
 .message{
-    margin-bottom:13px;
-    max-width:650px;
-}
-
-.message.mine{
-    margin-left:auto;
-    text-align:right;
+    margin-bottom:12px;
+    max-width:600px;
 }
 
 .username{
     color:#888;
     font-size:12px;
-    margin-bottom:4px;
-}
-
-.uid{
-    color:#555;
-    font-size:10px;
+    margin-bottom:3px;
 }
 
 .bubble{
     display:inline-block;
-    padding:10px 13px;
     background:#252525;
+    padding:10px 13px;
     border-radius:10px;
-    max-width:80%;
-    text-align:left;
     word-break:break-word;
 }
 
-.mine .bubble{
+.my-message{
+    text-align:right;
+    margin-left:auto;
+}
+
+.my-message .bubble{
     background:#2563eb;
 }
 
-.input{
-    display:flex;
-    gap:8px;
-    padding:10px;
-    background:#181818;
-    border-top:1px solid #333;
+.system{
+    text-align:center;
+    color:#777;
+    font-size:12px;
+    margin:10px;
 }
 
-#message{
-    flex:1;
-    background:#111;
-    border:1px solid #333;
-    color:white;
+.input-area{
     padding:12px;
+    background:#181818;
+    display:flex;
+    gap:8px;
+}
+
+#messageInput{
+    flex:1;
+    padding:12px;
+    border:1px solid #333;
     border-radius:8px;
+    background:#111;
+    color:#fff;
     outline:none;
 }
 
-button{
+#sendButton{
     border:0;
     background:#2563eb;
     color:white;
-    border-radius:8px;
     padding:0 18px;
+    border-radius:8px;
     cursor:pointer;
 }
 
@@ -118,10 +114,10 @@ button{
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:5;
+    z-index:10;
 }
 
-.login{
+.login-box{
     width:320px;
     padding:25px;
     background:#181818;
@@ -129,352 +125,174 @@ button{
     border-radius:12px;
 }
 
-.login h1{
+.login-box h1{
     margin-top:0;
 }
 
-.login input{
+.login-box input{
     width:100%;
     padding:12px;
     margin:10px 0;
     background:#111;
+    color:#fff;
     border:1px solid #333;
-    color:white;
     border-radius:8px;
     outline:none;
 }
 
-.login button{
+.login-box button{
     width:100%;
-    height:42px;
-}
-
-#error{
-    color:#f85149;
-    font-size:13px;
-    margin-top:10px;
+    padding:12px;
+    border:0;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
 }
 </style>
+
 </head>
 
 <body>
 
 <div id="login">
-    <div class="login">
+    <div class="login-box">
         <h1>Global Chat</h1>
-
-        <input
-            id="username"
-            maxlength="20"
-            placeholder="Ваше имя"
-        >
-
-        <button onclick="register()">
-            Войти
-        </button>
-
-        <div id="error"></div>
+        <input id="usernameInput" maxlength="20" placeholder="Ваше имя">
+        <button onclick="joinChat()">Войти</button>
+        <div id="loginStatus"></div>
     </div>
 </div>
 
 <div class="app">
 
-    <div class="header">
-        <div class="logo">
-            Global Chat
-        </div>
+```
+<div class="header">
+    <div class="logo">Global Chat</div>
+    <div class="online" id="connectionStatus">● Подключение...</div>
+</div>
 
-        <div class="status" id="status">
-            ● Подключение
-        </div>
-    </div>
+<div id="messages"></div>
 
-    <div id="messages"></div>
-
-    <form class="input" onsubmit="send(event)">
-        <input
-            id="message"
-            maxlength="500"
-            autocomplete="off"
-            placeholder="Сообщение..."
-        >
-
-        <button>
-            ➤
-        </button>
-    </form>
+<form class="input-area" onsubmit="sendMessage(event)">
+    <input id="messageInput" maxlength="500" autocomplete="off" placeholder="Сообщение...">
+    <button id="sendButton">➤</button>
+</form>
+```
 
 </div>
 
 <script>
+const CLUSTER_ID="free.blr2";
+const API_KEY="z6wytuVGQjVrMXNRFhqw7OmWppXB0kwq2amiuCmF";
+const ROOM_ID="global-chat";
 
-let user = null;
-let socket = null;
+let socket=null;
+let username="";
 
-const savedToken =
-    localStorage.getItem("chatToken");
+function joinChat(){
+    username=document.getElementById("usernameInput").value.trim();
 
-async function register(){
-
-    const input =
-        document.getElementById("username");
-
-    const name =
-        input.value.trim();
-
-    if(!name){
-        showError("Введите имя");
+    if(!username){
+        document.getElementById("loginStatus").textContent="Введите имя";
         return;
     }
 
-    const response =
-        await fetch("/register",{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body:JSON.stringify({
-                username:name
-            })
-        });
-
-    const data =
-        await response.json();
-
-    if(data.error){
-        showError(data.error);
-        return;
-    }
-
-    localStorage.setItem(
-        "chatToken",
-        data.token
-    );
-
-    localStorage.setItem(
-        "chatUsername",
-        data.username
-    );
-
-    localStorage.setItem(
-        "chatUserId",
-        data.id
-    );
-
-    user = data;
-
-    document.getElementById(
-        "login"
-    ).style.display="none";
-
-    loadChat();
-}
-
-async function login(){
-
-    const token =
-        localStorage.getItem("chatToken");
-
-    const username =
-        localStorage.getItem("chatUsername");
-
-    const id =
-        localStorage.getItem("chatUserId");
-
-    if(!token || !username || !id){
-        return false;
-    }
-
-    user = {
-        token:token,
-        username:username,
-        id:id
-    };
-
-    document.getElementById(
-        "login"
-    ).style.display="none";
-
-    loadChat();
-
-    return true;
-}
-
-async function loadChat(){
-
-    const response =
-        await fetch("/history");
-
-    const history =
-        await response.json();
-
-    const container =
-        document.getElementById("messages");
-
-    container.innerHTML="";
-
-    history.forEach(message=>{
-        showMessage(
-            message.sender,
-            message.text,
-            message.userId
-        );
-    });
-
-    container.scrollTop =
-        container.scrollHeight;
-
+    localStorage.setItem("globalChatUsername",username);
+    document.getElementById("login").style.display="none";
     connect();
 }
 
 function connect(){
+    const url=`wss://${CLUSTER_ID}.piesocket.com/v3/${ROOM_ID}?api_key=${API_KEY}&notify_self=1`;
 
-    const protocol =
-        location.protocol==="https:"
-        ? "wss"
-        : "ws";
-
-    socket =
-        new WebSocket(
-            `${protocol}://${location.host}/ws?token=${user.token}`
-        );
+    socket=new WebSocket(url);
 
     socket.onopen=()=>{
-
-        document.getElementById(
-            "status"
-        ).textContent="● Онлайн";
-
+        document.getElementById("connectionStatus").textContent="● Онлайн";
+        addSystemMessage("Вы вошли в чат");
     };
 
     socket.onmessage=(event)=>{
+        try{
+            const data=JSON.parse(event.data);
 
-        const data =
-            JSON.parse(event.data);
+            if(data.event==="new_message"){
+                showMessage(data.sender,data.text);
+            }
 
-        if(data.type==="message"){
-
-            showMessage(
-                data.sender,
-                data.text,
-                data.userId
-            );
-
-        }
-
+            if(data.event==="new_joining"){
+                addSystemMessage(data.sender+" вошёл");
+            }
+        }catch(e){}
     };
 
     socket.onclose=()=>{
-
-        document.getElementById(
-            "status"
-        ).textContent="● Оффлайн";
-
+        document.getElementById("connectionStatus").textContent="● Оффлайн";
         setTimeout(connect,3000);
-
     };
-
 }
 
-function send(event){
-
+function sendMessage(event){
     event.preventDefault();
 
-    const input =
-        document.getElementById("message");
+    const input=document.getElementById("messageInput");
+    const text=input.value.trim();
 
-    const text =
-        input.value.trim();
+    if(!text)return;
 
-    if(!text)
+    if(!socket || socket.readyState!==WebSocket.OPEN){
         return;
+    }
 
-    if(
-        !socket ||
-        socket.readyState!==WebSocket.OPEN
-    )
-        return;
-
-    socket.send(
-        JSON.stringify({
-            type:"message",
-            text:text
-        })
-    );
+    socket.send(JSON.stringify({
+        event:"new_message",
+        sender:username,
+        text:text
+    }));
 
     input.value="";
     input.focus();
-
 }
 
-function showMessage(
-    sender,
-    text,
-    id
-){
+function showMessage(sender,text){
+    const container=document.getElementById("messages");
 
-    const container =
-        document.getElementById("messages");
-
-    const message =
-        document.createElement("div");
-
+    const message=document.createElement("div");
     message.className="message";
 
-    if(
-        user &&
-        id===user.id
-    ){
-        message.classList.add("mine");
+    if(sender===username){
+        message.classList.add("my-message");
     }
 
-    const name =
-        document.createElement("div");
-
+    const name=document.createElement("div");
     name.className="username";
+    name.textContent=sender;
 
-    name.textContent=sender+" ";
-
-    const uid =
-        document.createElement("span");
-
-    uid.className="uid";
-
-    uid.textContent="#"+id;
-
-    name.appendChild(uid);
-
-    const bubble =
-        document.createElement("div");
-
+    const bubble=document.createElement("div");
     bubble.className="bubble";
-
     bubble.textContent=text;
 
     message.appendChild(name);
     message.appendChild(bubble);
-
     container.appendChild(message);
 
-    container.scrollTop =
-        container.scrollHeight;
-
+    container.scrollTop=container.scrollHeight;
 }
 
-function showError(text){
+function addSystemMessage(text){
+    const message=document.createElement("div");
+    message.className="system";
+    message.textContent=text;
 
-    document.getElementById(
-        "error"
-    ).textContent=text;
-
+    document.getElementById("messages").appendChild(message);
 }
 
-if(savedToken){
+const savedUsername=localStorage.getItem("globalChatUsername");
 
-    login();
-
+if(savedUsername){
+    document.getElementById("usernameInput").value=savedUsername;
 }
-
 </script>
 
 </body>
