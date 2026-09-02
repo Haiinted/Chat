@@ -1,6 +1,5 @@
 import sqlite3
 import secrets
-import asyncio
 from datetime import datetime
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -12,11 +11,13 @@ import uvicorn
 
 app = FastAPI()
 
+
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 
@@ -63,9 +64,7 @@ connections = set()
 # =========================
 
 def create_user(username):
-
     user_id = "user_" + secrets.token_hex(6)
-
     token = secrets.token_hex(32)
 
     db.execute(
@@ -88,10 +87,6 @@ def create_user(username):
 
 
 def get_user(token):
-
-    if not token:
-        return None
-
     return db.execute(
         """
         SELECT id, username
@@ -108,7 +103,6 @@ def get_user(token):
 
 @app.get("/")
 async def index():
-
     return FileResponse("index.html")
 
 
@@ -119,19 +113,14 @@ async def index():
 @app.post("/register")
 async def register(data: dict):
 
-    username = data.get(
-        "username",
-        ""
-    ).strip()
+    username = data.get("username", "").strip()
 
     if not username:
-
         return {
             "error": "Введите имя"
         }
 
     if len(username) > 20:
-
         return {
             "error": "Максимум 20 символов"
         }
@@ -146,14 +135,11 @@ async def register(data: dict):
     ).fetchone()
 
     if old:
-
         return {
             "error": "Это имя уже занято"
         }
 
-    user_id, token = create_user(
-        username
-    )
+    user_id, token = create_user(username)
 
     return {
         "id": user_id,
@@ -163,13 +149,14 @@ async def register(data: dict):
 
 
 # =========================
-# HISTORY
+# CHAT HISTORY
 # =========================
 
 @app.get("/history")
 async def history():
 
-    rows = db.execute("""
+    rows = db.execute(
+        """
         SELECT
             id,
             user_id,
@@ -178,7 +165,9 @@ async def history():
             created_at
         FROM messages
         ORDER BY id ASC
-    """).fetchall()
+        LIMIT 5000
+        """
+    ).fetchall()
 
     return [
         {
@@ -197,31 +186,21 @@ async def history():
 # =========================
 
 @app.websocket("/ws")
-async def websocket(
-    websocket: WebSocket
-):
+async def websocket(websocket: WebSocket):
 
-    token = websocket.query_params.get(
-        "token"
-    )
+    token = websocket.query_params.get("token")
 
     user = get_user(token)
 
     if not user:
-
-        await websocket.close(
-            code=1008
-        )
-
+        await websocket.close()
         return
 
     user_id, username = user
 
     await websocket.accept()
 
-    connections.add(
-        websocket
-    )
+    connections.add(websocket)
 
     try:
 
@@ -244,16 +223,11 @@ async def websocket(
 
             created = datetime.now().isoformat()
 
-            # Сохраняем СООБЩЕНИЕ НА СЕРВЕРЕ
+            # Сохраняем сообщение
             cursor = db.execute(
                 """
                 INSERT INTO messages
-                (
-                    user_id,
-                    username,
-                    text,
-                    created_at
-                )
+                (user_id, username, text, created_at)
                 VALUES (?, ?, ?, ?)
                 """,
                 (
@@ -266,58 +240,42 @@ async def websocket(
 
             db.commit()
 
+            # Сообщение для клиентов
             message = {
                 "type": "message",
-
                 "id": cursor.lastrowid,
-
                 "userId": user_id,
-
                 "sender": username,
-
                 "text": text,
-
                 "time": created
             }
 
-            # Отправляем ВСЕМ подключенным
-            dead_connections = []
+            # Рассылаем всем
+            dead = []
 
-            for connection in list(connections):
+            for connection in connections:
 
                 try:
-
-                    await connection.send_json(
-                        message
-                    )
+                    await connection.send_json(message)
 
                 except Exception:
+                    dead.append(connection)
 
-                    dead_connections.append(
-                        connection
-                    )
-
-            for connection in dead_connections:
-
-                connections.discard(
-                    connection
-                )
+            # Удаляем отключившихся
+            for connection in dead:
+                connections.discard(connection)
 
     except WebSocketDisconnect:
 
-        connections.discard(
-            websocket
-        )
+        connections.discard(websocket)
 
     except Exception:
 
-        connections.discard(
-            websocket
-        )
+        connections.discard(websocket)
 
 
 # =========================
-# START
+# START SERVER
 # =========================
 
 if __name__ == "__main__":
