@@ -1,19 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Global Chat</title>
 
 <style>
-*{
-    box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
     margin:0;
     background:#111;
-    color:white;
+    color:#fff;
     font-family:Arial,sans-serif;
 }
 
@@ -24,13 +23,12 @@ body{
 }
 
 .header{
-    height:55px;
-    padding:0 18px;
+    padding:14px 18px;
     background:#181818;
     border-bottom:1px solid #333;
     display:flex;
-    align-items:center;
     justify-content:space-between;
+    align-items:center;
 }
 
 .logo{
@@ -38,9 +36,9 @@ body{
     font-weight:bold;
 }
 
-.status{
-    font-size:13px;
+.online{
     color:#4caf50;
+    font-size:13px;
 }
 
 #messages{
@@ -50,65 +48,75 @@ body{
 }
 
 .message{
-    margin-bottom:13px;
-    max-width:650px;
-}
-
-.message.mine{
-    margin-left:auto;
-    text-align:right;
+    margin-bottom:12px;
+    max-width:600px;
 }
 
 .username{
     color:#888;
     font-size:12px;
-    margin-bottom:4px;
+    margin-bottom:3px;
 }
 
-.uid{
+.user-id{
     color:#555;
     font-size:10px;
+    margin-left:5px;
 }
 
 .bubble{
     display:inline-block;
-    padding:10px 13px;
     background:#252525;
+    padding:10px 13px;
     border-radius:10px;
-    max-width:80%;
-    text-align:left;
     word-break:break-word;
 }
 
-.mine .bubble{
+.my-message{
+    text-align:right;
+    margin-left:auto;
+}
+
+.my-message .bubble{
     background:#2563eb;
 }
 
-.input{
-    display:flex;
-    gap:8px;
+.system{
+    text-align:center;
+    color:#666;
+    font-size:12px;
+    margin:12px;
+}
+
+.input-area{
     padding:10px;
     background:#181818;
+    display:flex;
+    gap:8px;
     border-top:1px solid #333;
 }
 
-#message{
+#messageInput{
     flex:1;
-    background:#111;
-    border:1px solid #333;
-    color:white;
     padding:12px;
+    border:1px solid #333;
     border-radius:8px;
+    background:#111;
+    color:#fff;
     outline:none;
 }
 
-button{
+#sendButton{
     border:0;
     background:#2563eb;
     color:white;
-    border-radius:8px;
     padding:0 18px;
+    border-radius:8px;
     cursor:pointer;
+}
+
+#sendButton:hover{
+    background:#1d4ed8;
 }
 
 #login{
@@ -118,10 +126,10 @@ button{
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:5;
+    z-index:10;
 }
 
-.login{
+.login-box{
     width:320px;
     padding:25px;
     background:#181818;
@@ -129,259 +137,238 @@ button{
     border-radius:12px;
 }
 
-.login h1{
+.login-box h1{
     margin-top:0;
 }
 
-.login input{
+.login-box input{
     width:100%;
     padding:12px;
     margin:10px 0;
     background:#111;
+    color:#fff;
     border:1px solid #333;
-    color:white;
     border-radius:8px;
     outline:none;
 }
 
-.login button{
+.login-box button{
     width:100%;
-    height:42px;
+    padding:12px;
+    border:0;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
 }
 
-#error{
+#loginStatus{
     color:#f85149;
-    font-size:13px;
-    margin-top:10px;
+    font-size:12px;
+    margin-top:8px;
 }
 </style>
+
 </head>
 
 <body>
 
 <div id="login">
-    <div class="login">
+    <div class="login-box">
         <h1>Global Chat</h1>
 
-        <input
-            id="username"
-            maxlength="20"
-            placeholder="Ваше имя"
-        >
+```
+    <input
+        id="usernameInput"
+        maxlength="20"
+        placeholder="Ваше имя"
+    >
 
-        <button onclick="register()">
-            Войти
-        </button>
+    <button onclick="joinChat()">Войти</button>
 
-        <div id="error"></div>
-    </div>
+    <div id="loginStatus"></div>
+</div>
+```
+
 </div>
 
 <div class="app">
 
-    <div class="header">
-        <div class="logo">
-            Global Chat
-        </div>
-
-        <div class="status" id="status">
-            ● Подключение
-        </div>
+```
+<div class="header">
+    <div class="logo">Global Chat</div>
+    <div class="online" id="connectionStatus">
+        ● Подключение...
     </div>
+</div>
 
-    <div id="messages"></div>
+<div id="messages"></div>
 
-    <form class="input" onsubmit="send(event)">
-        <input
-            id="message"
-            maxlength="500"
-            autocomplete="off"
-            placeholder="Сообщение..."
-        >
+<form class="input-area" onsubmit="sendMessage(event)">
+    <input
+        id="messageInput"
+        maxlength="500"
+        autocomplete="off"
+        placeholder="Сообщение..."
+    >
 
-        <button>
-            ➤
-        </button>
-    </form>
+    <button id="sendButton">➤</button>
+</form>
+```
 
 </div>
 
 <script>
 
-let user = null;
+const CLUSTER_ID = "free.blr2";
+const API_KEY = "z6wytuVGQjVrMXNRFhqw7OmWppXB0kwq2amiuCmF";
+const ROOM_ID = "global-chat";
+
 let socket = null;
+let username = "";
+let userId = "";
 
-const savedToken =
-    localStorage.getItem("chatToken");
+const savedName = localStorage.getItem("globalChatUsername");
+const savedId = localStorage.getItem("globalChatUserId");
 
-async function register(){
+if(savedName && savedId){
+
+    username = savedName;
+    userId = savedId;
+
+    document.getElementById("usernameInput").value = username;
+    document.getElementById("usernameInput").disabled = true;
+
+    document.getElementById("login").style.display = "none";
+
+    loadHistory();
+    connect();
+}
+
+function createUserId(){
+
+    return "user_" +
+        Date.now().toString(36) +
+        "_" +
+        Math.random().toString(36).substring(2,10);
+
+}
+
+function joinChat(){
 
     const input =
-        document.getElementById("username");
+        document.getElementById("usernameInput");
 
     const name =
         input.value.trim();
 
     if(!name){
-        showError("Введите имя");
+
+        document.getElementById("loginStatus").textContent =
+            "Введите имя";
+
         return;
     }
 
-    const response =
-        await fetch("/register",{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body:JSON.stringify({
-                username:name
-            })
-        });
+    username = name;
 
-    const data =
-        await response.json();
-
-    if(data.error){
-        showError(data.error);
-        return;
-    }
+    userId = createUserId();
 
     localStorage.setItem(
-        "chatToken",
-        data.token
+        "globalChatUsername",
+        username
     );
 
     localStorage.setItem(
-        "chatUsername",
-        data.username
+        "globalChatUserId",
+        userId
     );
 
-    localStorage.setItem(
-        "chatUserId",
-        data.id
-    );
+    input.disabled = true;
 
-    user = data;
+    document.getElementById("login").style.display =
+        "none";
 
-    document.getElementById(
-        "login"
-    ).style.display="none";
-
-    loadChat();
-}
-
-async function login(){
-
-    const token =
-        localStorage.getItem("chatToken");
-
-    const username =
-        localStorage.getItem("chatUsername");
-
-    const id =
-        localStorage.getItem("chatUserId");
-
-    if(!token || !username || !id){
-        return false;
-    }
-
-    user = {
-        token:token,
-        username:username,
-        id:id
-    };
-
-    document.getElementById(
-        "login"
-    ).style.display="none";
-
-    loadChat();
-
-    return true;
-}
-
-async function loadChat(){
-
-    const response =
-        await fetch("/history");
-
-    const history =
-        await response.json();
-
-    const container =
-        document.getElementById("messages");
-
-    container.innerHTML="";
-
-    history.forEach(message=>{
-        showMessage(
-            message.sender,
-            message.text,
-            message.userId
-        );
-    });
-
-    container.scrollTop =
-        container.scrollHeight;
-
+    loadHistory();
     connect();
 }
 
 function connect(){
 
-    const protocol =
-        location.protocol==="https:"
-        ? "wss"
-        : "ws";
+    const url =
+        `wss://${CLUSTER_ID}.piesocket.com/v3/${ROOM_ID}?api_key=${API_KEY}&notify_self=1`;
 
-    socket =
-        new WebSocket(
-            `${protocol}://${location.host}/ws?token=${user.token}`
+    socket = new WebSocket(url);
+
+    socket.onopen = function(){
+
+        document.getElementById(
+            "connectionStatus"
+        ).textContent = "● Онлайн";
+
+        document.getElementById(
+            "connectionStatus"
+        ).style.color = "#4caf50";
+
+        addSystemMessage(
+            "Вы подключились"
         );
+    };
 
-    socket.onopen=()=>{
+    socket.onmessage = function(event){
 
-        document.getElementById(
-            "status"
-        ).textContent="● Онлайн";
+        try{
+
+            const data =
+                JSON.parse(event.data);
+
+            if(data.event === "new_message"){
+
+                showMessage(
+                    data.sender,
+                    data.text,
+                    data.userId
+                );
+
+                saveMessage(
+                    data.sender,
+                    data.text,
+                    data.userId
+                );
+            }
+
+            if(data.event === "new_joining"){
+
+                addSystemMessage(
+                    data.sender + " вошёл"
+                );
+            }
+
+        }catch(e){}
 
     };
 
-    socket.onmessage=(event)=>{
-
-        const data =
-            JSON.parse(event.data);
-
-        if(data.type==="message"){
-
-            showMessage(
-                data.sender,
-                data.text,
-                data.userId
-            );
-
-        }
-
-    };
-
-    socket.onclose=()=>{
+    socket.onclose = function(){
 
         document.getElementById(
-            "status"
-        ).textContent="● Оффлайн";
+            "connectionStatus"
+        ).textContent = "● Оффлайн";
+
+        document.getElementById(
+            "connectionStatus"
+        ).style.color = "#f85149";
 
         setTimeout(connect,3000);
-
     };
 
 }
 
-function send(event){
+function sendMessage(event){
 
     event.preventDefault();
 
     const input =
-        document.getElementById("message");
+        document.getElementById("messageInput");
 
     const text =
         input.value.trim();
@@ -391,27 +378,31 @@ function send(event){
 
     if(
         !socket ||
-        socket.readyState!==WebSocket.OPEN
-    )
+        socket.readyState !== WebSocket.OPEN
+    ){
         return;
+    }
 
     socket.send(
         JSON.stringify({
-            type:"message",
+
+            event:"new_message",
+
+            sender:username,
+
+            userId:userId,
+
             text:text
+
         })
     );
 
-    input.value="";
+    input.value = "";
     input.focus();
 
 }
 
-function showMessage(
-    sender,
-    text,
-    id
-){
+function showMessage(sender,text,id){
 
     const container =
         document.getElementById("messages");
@@ -419,37 +410,39 @@ function showMessage(
     const message =
         document.createElement("div");
 
-    message.className="message";
+    message.className = "message";
 
-    if(
-        user &&
-        id===user.id
-    ){
-        message.classList.add("mine");
+    if(id === userId){
+
+        message.classList.add(
+            "my-message"
+        );
+
     }
 
     const name =
         document.createElement("div");
 
-    name.className="username";
+    name.className = "username";
 
-    name.textContent=sender+" ";
+    name.textContent = sender;
 
-    const uid =
+    const idElement =
         document.createElement("span");
 
-    uid.className="uid";
+    idElement.className = "user-id";
 
-    uid.textContent="#"+id;
+    idElement.textContent =
+        "#" + id;
 
-    name.appendChild(uid);
+    name.appendChild(idElement);
 
     const bubble =
         document.createElement("div");
 
-    bubble.className="bubble";
+    bubble.className = "bubble";
 
-    bubble.textContent=text;
+    bubble.textContent = text;
 
     message.appendChild(name);
     message.appendChild(bubble);
@@ -458,20 +451,99 @@ function showMessage(
 
     container.scrollTop =
         container.scrollHeight;
-
 }
 
-function showError(text){
+function addSystemMessage(text){
+
+    const message =
+        document.createElement("div");
+
+    message.className = "system";
+
+    message.textContent = text;
 
     document.getElementById(
-        "error"
-    ).textContent=text;
+        "messages"
+    ).appendChild(message);
 
 }
 
-if(savedToken){
+function saveMessage(sender,text,id){
 
-    login();
+    let history =
+        JSON.parse(
+            localStorage.getItem(
+                "globalChatHistory"
+            ) || "[]"
+        );
+
+    const exists =
+        history.some(function(message){
+
+            return (
+                message.sender === sender &&
+                message.text === text &&
+                message.userId === id
+            );
+
+        });
+
+    if(!exists){
+
+        history.push({
+
+            sender:sender,
+
+            text:text,
+
+            userId:id,
+
+            time:Date.now()
+
+        });
+
+    }
+
+    if(history.length > 1000){
+
+        history =
+            history.slice(-1000);
+
+    }
+
+    localStorage.setItem(
+        "globalChatHistory",
+        JSON.stringify(history)
+    );
+
+}
+
+function loadHistory(){
+
+    const history =
+        JSON.parse(
+            localStorage.getItem(
+                "globalChatHistory"
+            ) || "[]"
+        );
+
+    const container =
+        document.getElementById("messages");
+
+    container.innerHTML = "";
+
+    history.forEach(function(message){
+
+        showMessage(
+            message.sender,
+            message.text,
+            message.userId
+        );
+
+    });
+
+    container.scrollTop =
+        container.scrollHeight;
 
 }
 
