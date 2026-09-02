@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Общий Онлайн Чат</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background: #efeae2; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        
+        .chat-container { width: 100%; max-width: 420px; height: 85vh; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; }
+        .chat-header { background: #075e54; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: 600; }
+        .status { font-size: 11px; display: block; opacity: 0.8; margin-top: 3px; }
+        
+        .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-color: #f8f9fa; }
+        
+        .message { padding: 8px 14px; border-radius: 8px; max-width: 75%; word-wrap: break-word; font-size: 15px; line-height: 1.4; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .message .sender { font-size: 11px; font-weight: bold; margin-bottom: 3px; display: block; }
+        
+        /* Свои сообщения (справа) */
+        .message.sent { background: #dcf8c6; align-self: flex-end; border-top-right-radius: 0; }
+        .message.sent .sender { color: #4f7c2a; }
+        
+        /* Чужие сообщения (слева) */
+        .message.received { background: #ffffff; align-self: flex-start; border-top-left-radius: 0; }
+        .message.received .sender { color: #128c7e; }
+        
+        .input-area { display: flex; padding: 10px; background: #f0f0f0; gap: 8px; align-items: center; }
+        .input-area input { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 25px; outline: none; font-size: 15px; }
+        .input-area button { background: #075e54; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; justify-content: center; align-items: center; }
+        .input-area button:hover { background: #128c7e; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        💬 Глобальный Чат
+        <span class="status" id="status">Подключение к сети...</span>
+    </div>
+    <div class="messages-box" id="messagesBox"></div>
+    <div class="input-area">
+        <input type="text" id="messageInput" placeholder="Напишите сообщение..." autocomplete="off">
+        <button id="sendBtn">➤</button>
+    </div>
+</div>
+
+<script>
+    // 1. Создаем имя пользователя в сессии
+    if (!sessionStorage.getItem('chatUser')) {
+        sessionStorage.setItem('chatUser', "Юзер_" + Math.floor(Math.random() * 1000));
+    }
+    const myName = sessionStorage.getItem('chatUser');
+
+    // 2. Название комнаты (канала). Можно менять на любое число или текст, чтобы разделять беседы
+    const roomName = '17'; 
+
+    // 3. Подключение к вашему бесплатному кластеру PieSocket
+    const apiKey = 'z6wytuVGQjVrMXNRFhqw70mWppXB0kwq2amiuCmF'; 
+    const clusterId = 'free.blr2'; 
+    
+    // Формируем полностью рабочий WebSocket URL на основе ваших данных
+    const socket = new WebSocket(`wss://${clusterId}://{roomName}?api_key=${apiKey}&notify_self=1`);
+
+    const messagesBox = document.getElementById('messagesBox');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const statusText = document.getElementById('status');
+
+    // Функция защиты от XSS (чтобы пользователи не могли сломать чат отправкой HTML-тегов)
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
+
+    // Событие успешного подключения
+    socket.onopen = function() {
+        statusText.innerText = `В сети как: ${myName}`;
+        statusText.style.color = '#a3ffb4';
+    };
+
+    // 4. Прием входящих сообщений
+    socket.onmessage = function(event) {
+        try {
+            const data = JSON.parse(event.data);
+            if (!data.sender || !data.text) return;
+
+            const type = (data.sender === myName) ? 'sent' : 'received';
+            displayMessage(data.sender, data.text, type);
+        } catch (e) {
+            // Игнорируем сервисный шум WebSocket сервера
+        }
+    };
+
+    // Обработка ошибок сети
+    socket.onerror = function(err) {
+        statusText.innerText = "Ошибка подключения!";
+        statusText.style.color = '#ff9e9e';
+        console.error("WebSocket Error:", err);
+    };
+
+    // Обработка закрытия соединения
+    socket.onclose = function() {
+        statusText.innerText = "Соединение разорвано";
+        statusText.style.color = '#ff9e9e';
+    };
+
+    // 5. Функция добавления сообщения на экран
+    function displayMessage(senderName, text, type) {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message', type);
+        
+        const safeSender = escapeHTML(senderName);
+        const safeText = escapeHTML(text);
+        
+        msgDiv.innerHTML = `<span class="sender">${safeSender}</span>${safeText}`;
+        messagesBox.appendChild(msgDiv);
+        messagesBox.scrollTop = messagesBox.scrollHeight; 
+    }
+
+    // 6. Функция отправки сообщения в сеть
+    function sendMessage() {
+        const text = messageInput.value.trim();
+        if (text === '') return;
+
+        if (socket.readyState !== WebSocket.OPEN) {
+            alert("Подождите, идет восстановление подключения к сети...");
+            return;
+        }
+
+        const messagePayload = {
+            sender: myName,
+            text: text
+        };
+
+        socket.send(JSON.stringify(messagePayload));
+        messageInput.value = '';
+    }
+
+    // Привязка отправки к кнопке и клавише Enter
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>
+
+</body>
+</html>
