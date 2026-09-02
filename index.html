@@ -30,6 +30,8 @@
         .input-area button { background: #075e54; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; justify-content: center; align-items: center; }
         .input-area button:hover { background: #128c7e; }
     </style>
+    <!-- Подключаем официальную библиотеку Pusher для стабильной связи -->
+    <script src="https://pusher.com"></script>
 </head>
 <body>
 
@@ -46,67 +48,63 @@
 </div>
 
 <script>
-    // 1. Создаем имя пользователя в сессии
+    // 1. Создаем случайное имя пользователя
     if (!sessionStorage.getItem('chatUser')) {
         sessionStorage.setItem('chatUser', "Юзер_" + Math.floor(Math.random() * 1000));
     }
     const myName = sessionStorage.getItem('chatUser');
-
-    // 2. Название комнаты (канала). Можно менять на любое число или текст, чтобы разделять беседы
-    const roomName = '17'; 
-
-    // 3. Подключение к вашему бесплатному кластеру PieSocket
-    const apiKey = 'z6wytuVGQjVrMXNRFhqw70mWppXB0kwq2amiuCmF'; 
-    const clusterId = 'free.blr2'; 
-    
-    // Формируем полностью рабочий WebSocket URL на основе ваших данных
-    const socket = new WebSocket(`wss://${clusterId}://{roomName}?api_key=${apiKey}&notify_self=1`);
 
     const messagesBox = document.getElementById('messagesBox');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
     const statusText = document.getElementById('status');
 
-    // Функция защиты от XSS (чтобы пользователи не могли сломать чат отправкой HTML-тегов)
+    // 2. Данные вашего личного аккаунта PieSocket
+    const apiKey = 'z6wytuVGQjVrMXNRFhqw70mWppXB0kwq2amiuCmF'; // Ваш API Key
+    const clusterId = 'free.blr2'; // Ваш Cluster ID
+
+    // Инициализируем Pusher-клиент через сервера PieSocket
+    const pusher = new Pusher(apiKey, {
+        cluster: clusterId,
+        wsHost: `${clusterId}.piesocket.com`,
+        wsPort: 443,
+        wssPort: 443,
+        forceTLS: true,
+        enabledTransports: ['ws', 'wss']
+    });
+
+    // Подписываемся на комнату (канал)
+    const channel = pusher.subscribe('chat-room');
+
+    // Отслеживаем статус подключения
+    pusher.connection.bind('state_change', function(states) {
+        if (states.current === 'connected') {
+            statusText.innerText = `В сети как: ${myName}`;
+            statusText.style.color = '#a3ffb4';
+        } else if (states.current === 'connecting') {
+            statusText.innerText = "Подключение...";
+            statusText.style.color = '#fff';
+        } else {
+            statusText.innerText = "Соединение разорвано";
+            statusText.style.color = '#ff9e9e';
+        }
+    });
+
+    // Функция защиты от XSS тегов
     function escapeHTML(str) {
         return str.replace(/[&<>'"]/g, 
             tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
         );
     }
 
-    // Событие успешного подключения
-    socket.onopen = function() {
-        statusText.innerText = `В сети как: ${myName}`;
-        statusText.style.color = '#a3ffb4';
-    };
+    // 3. Прием входящих сообщений
+    channel.bind('new-message', function(data) {
+        if (!data.sender || !data.text) return;
+        const type = (data.sender === myName) ? 'sent' : 'received';
+        displayMessage(data.sender, data.text, type);
+    });
 
-    // 4. Прием входящих сообщений
-    socket.onmessage = function(event) {
-        try {
-            const data = JSON.parse(event.data);
-            if (!data.sender || !data.text) return;
-
-            const type = (data.sender === myName) ? 'sent' : 'received';
-            displayMessage(data.sender, data.text, type);
-        } catch (e) {
-            // Игнорируем сервисный шум WebSocket сервера
-        }
-    };
-
-    // Обработка ошибок сети
-    socket.onerror = function(err) {
-        statusText.innerText = "Ошибка подключения!";
-        statusText.style.color = '#ff9e9e';
-        console.error("WebSocket Error:", err);
-    };
-
-    // Обработка закрытия соединения
-    socket.onclose = function() {
-        statusText.innerText = "Соединение разорвано";
-        statusText.style.color = '#ff9e9e';
-    };
-
-    // 5. Функция добавления сообщения на экран
+    // Отрисовка сообщения на экране
     function displayMessage(senderName, text, type) {
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', type);
@@ -119,26 +117,29 @@
         messagesBox.scrollTop = messagesBox.scrollHeight; 
     }
 
-    // 6. Функция отправки сообщения в сеть
+    // 4. Отправка сообщения
     function sendMessage() {
         const text = messageInput.value.trim();
         if (text === '') return;
 
-        if (socket.readyState !== WebSocket.OPEN) {
-            alert("Подождите, идет восстановление подключения к сети...");
+        if (pusher.connection.state !== 'connected') {
+            alert("Нет подключения к сети!");
             return;
         }
 
-        const messagePayload = {
-            sender: myName,
-            text: text
-        };
+        // Публикуем сообщение в сеть через REST API PieSocket
+        fetch(`https://${clusterId}://{apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                event: 'new-message',
+                data: { sender: myName, text: text }
+            })
+        }).catch(err => console.error("Ошибка отправки:", err));
 
-        socket.send(JSON.stringify(messagePayload));
         messageInput.value = '';
     }
 
-    // Привязка отправки к кнопке и клавише Enter
     sendBtn.addEventListener('click', sendMessage);
     messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
