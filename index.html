@@ -30,25 +30,23 @@
         .input-area button { background: #075e54; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; justify-content: center; align-items: center; }
         .input-area button:hover { background: #128c7e; }
     </style>
-    <!-- ИСКУССТВЕННЫЙ ИСПРАВЛЕННЫЙ СКРИПТ ПОДКЛЮЧЕНИЯ PUSHER -->
-    <script src="https://pusher.com"></script>
 </head>
 <body>
 
 <div class="chat-container">
     <div class="chat-header">
-        💬 Глобальный Чат
+        💬 Глобальный Чат PieSocket
         <span class="status" id="status">Подключение к сети...</span>
     </div>
     <div class="messages-box" id="messagesBox"></div>
     <div class="input-area">
-        <input type="text" id="messageInput" placeholder="Напишите message..." autocomplete="off">
+        <input type="text" id="messageInput" placeholder="Напишите сообщение..." autocomplete="off">
         <button id="sendBtn">➤</button>
     </div>
 </div>
 
 <script>
-    // 1. Создаем случайное имя пользователя
+    // 1. Создаем случайное имя пользователя во вкладке
     if (!sessionStorage.getItem('chatUser')) {
         sessionStorage.setItem('chatUser', "Юзер_" + Math.floor(Math.random() * 1000));
     }
@@ -59,50 +57,48 @@
     const sendBtn = document.getElementById('sendBtn');
     const statusText = document.getElementById('status');
 
-    // 2. Ваши ключи PieSocket
-    const apiKey = 'z6wytuVGQjVrMXNRFhqw70mWppXB0kwq2amiuCmF'; 
-    const clusterId = 'free.blr2'; 
+    // 2. Ваши личные данные из панели PieSocket
+    const clusterId = 'free.blr2';
+    const apiKey = 'z6wytuVGQjVrMXNRFhqw70mWppXB0kwq2amiuCmF';
+    const apiId = '24633'; // Ваш API ID из поля "API ID (For pusher sdks)"
 
-    // Инициализируем Pusher-клиент через PieSocket
-    const pusher = new Pusher(apiKey, {
-        cluster: clusterId,
-        wsHost: `${clusterId}.piesocket.com`,
-        wsPort: 443,
-        wssPort: 443,
-        forceTLS: true,
-        enabledTransports: ['ws', 'wss']
-    });
+    // Подключаемся напрямую через WebSocket URL вашего аккаунта
+    const socket = new WebSocket(`wss://${clusterId}://{apiId}?api_key=${apiKey}&notify_self=1`);
 
-    // Подписываемся на общую комнату
-    const channel = pusher.subscribe('chat-room');
+    // Отслеживаем успешное подключение
+    socket.onopen = function() {
+        statusText.innerText = `В сети как: ${myName}`;
+        statusText.style.color = '#a3ffb4';
+        console.log("Успешно подключено к вашему PieSocket!");
+    };
 
-    // Отслеживание статуса сети
-    pusher.connection.bind('state_change', function(states) {
-        if (states.current === 'connected') {
-            statusText.innerText = `В сети как: ${myName}`;
-            statusText.style.color = '#a3ffb4';
-        } else if (states.current === 'connecting') {
-            statusText.innerText = "Подключение...";
-            statusText.style.color = '#fff';
-        } else {
-            statusText.innerText = "Соединение разорвано";
-            statusText.style.color = '#ff9e9e';
-        }
-    });
+    // Если соединение закрылось
+    socket.onclose = function() {
+        statusText.innerText = "Соединение разорвано. Перезагрузите страницу.";
+        statusText.style.color = '#ff9e9e';
+    };
 
-    // Защита от взлома через сообщения (XSS)
+    // Защита от опасных тегов (XSS)
     function escapeHTML(str) {
         return str.replace(/[&<>'"]/g, 
             tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
         );
     }
 
-    // 3. Прием сообщений из сети
-    channel.bind('new-message', function(data) {
-        if (!data.sender || !data.text) return;
-        const type = (data.sender === myName) ? 'sent' : 'received';
-        displayMessage(data.sender, data.text, type);
-    });
+    // 3. ПРИЕМ СООБЩЕНИЙ
+    socket.onmessage = function(event) {
+        try {
+            const data = JSON.parse(event.data);
+            
+            // Защита от технических пингов сервера
+            if (!data || !data.sender || !data.text) return;
+
+            const type = (data.sender === myName) ? 'sent' : 'received';
+            displayMessage(data.sender, data.text, type);
+        } catch (e) {
+            // Игнорируем фоновые сервисные сообщения
+        }
+    };
 
     function displayMessage(senderName, text, type) {
         const msgDiv = document.createElement('div');
@@ -116,37 +112,23 @@
         messagesBox.scrollTop = messagesBox.scrollHeight; 
     }
 
-    // 4. ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ ЧЕРЕЗ API PIESOCKET
+    // 4. ОТПРАВКА СООБЩЕНИЯ
     function sendMessage() {
         const text = messageInput.value.trim();
         if (text === '') return;
 
-        if (pusher.connection.state !== 'connected') {
-            alert("Нет подключения к сети!");
+        if (socket.readyState !== WebSocket.OPEN) {
+            alert("Нет подключения к сети! Подождите.");
             return;
         }
 
-        // Формируем правильный эндпоинт отправки для PieSocket REST API
-        const publishUrl = `https://${clusterId}://{apiKey}`;
+        const messagePayload = {
+            sender: myName,
+            text: text
+        };
 
-        fetch(publishUrl, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                channel: 'chat-room',
-                event: 'new-message',
-                data: { sender: myName, text: text }
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                console.error("Сервер отклонил запрос отправки");
-            }
-        })
-        .catch(err => console.error("Ошибка сети при отправке:", err));
-
+        // Отправляем структурированный JSON прямо в сокет
+        socket.send(JSON.stringify(messagePayload));
         messageInput.value = '';
     }
 
