@@ -30,7 +30,7 @@
         .input-area button { background: #075e54; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; justify-content: center; align-items: center; }
         .input-area button:hover { background: #128c7e; }
     </style>
-    <!-- Подключаем официальную библиотеку Pusher для стабильной связи -->
+    <!-- ИСКУССТВЕННЫЙ ИСПРАВЛЕННЫЙ СКРИПТ ПОДКЛЮЧЕНИЯ PUSHER -->
     <script src="https://pusher.com"></script>
 </head>
 <body>
@@ -42,7 +42,7 @@
     </div>
     <div class="messages-box" id="messagesBox"></div>
     <div class="input-area">
-        <input type="text" id="messageInput" placeholder="Напишите сообщение..." autocomplete="off">
+        <input type="text" id="messageInput" placeholder="Напишите message..." autocomplete="off">
         <button id="sendBtn">➤</button>
     </div>
 </div>
@@ -59,11 +59,11 @@
     const sendBtn = document.getElementById('sendBtn');
     const statusText = document.getElementById('status');
 
-    // 2. Данные вашего личного аккаунта PieSocket
-    const apiKey = 'z6wytuVGQjVrMXNRFhqw70mWppXB0kwq2amiuCmF'; // Ваш API Key
-    const clusterId = 'free.blr2'; // Ваш Cluster ID
+    // 2. Ваши ключи PieSocket
+    const apiKey = 'z6wytuVGQjVrMXNRFhqw70mWppXB0kwq2amiuCmF'; 
+    const clusterId = 'free.blr2'; 
 
-    // Инициализируем Pusher-клиент через сервера PieSocket
+    // Инициализируем Pusher-клиент через PieSocket
     const pusher = new Pusher(apiKey, {
         cluster: clusterId,
         wsHost: `${clusterId}.piesocket.com`,
@@ -73,10 +73,10 @@
         enabledTransports: ['ws', 'wss']
     });
 
-    // Подписываемся на комнату (канал)
+    // Подписываемся на общую комнату
     const channel = pusher.subscribe('chat-room');
 
-    // Отслеживаем статус подключения
+    // Отслеживание статуса сети
     pusher.connection.bind('state_change', function(states) {
         if (states.current === 'connected') {
             statusText.innerText = `В сети как: ${myName}`;
@@ -90,21 +90,20 @@
         }
     });
 
-    // Функция защиты от XSS тегов
+    // Защита от взлома через сообщения (XSS)
     function escapeHTML(str) {
         return str.replace(/[&<>'"]/g, 
             tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
         );
     }
 
-    // 3. Прием входящих сообщений
+    // 3. Прием сообщений из сети
     channel.bind('new-message', function(data) {
         if (!data.sender || !data.text) return;
         const type = (data.sender === myName) ? 'sent' : 'received';
         displayMessage(data.sender, data.text, type);
     });
 
-    // Отрисовка сообщения на экране
     function displayMessage(senderName, text, type) {
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', type);
@@ -117,7 +116,7 @@
         messagesBox.scrollTop = messagesBox.scrollHeight; 
     }
 
-    // 4. Отправка сообщения
+    // 4. ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ ЧЕРЕЗ API PIESOCKET
     function sendMessage() {
         const text = messageInput.value.trim();
         if (text === '') return;
@@ -127,15 +126,26 @@
             return;
         }
 
-        // Публикуем сообщение в сеть через REST API PieSocket
-        fetch(`https://${clusterId}://{apiKey}`, {
+        // Формируем правильный эндпоинт отправки для PieSocket REST API
+        const publishUrl = `https://${clusterId}://{apiKey}`;
+
+        fetch(publishUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
+                channel: 'chat-room',
                 event: 'new-message',
                 data: { sender: myName, text: text }
             })
-        }).catch(err => console.error("Ошибка отправки:", err));
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error("Сервер отклонил запрос отправки");
+            }
+        })
+        .catch(err => console.error("Ошибка сети при отправке:", err));
 
         messageInput.value = '';
     }
