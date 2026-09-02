@@ -3,139 +3,643 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Общий Онлайн Чат</title>
+
+    <title>Global Chat</title>
+
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background: #efeae2; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        
-        .chat-container { width: 100%; max-width: 420px; height: 85vh; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; }
-        .chat-header { background: #075e54; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: 600; }
-        .status { font-size: 11px; display: block; opacity: 0.8; margin-top: 3px; }
-        
-        .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-color: #f8f9fa; }
-        
-        .message { padding: 8px 14px; border-radius: 8px; max-width: 75%; word-wrap: break-word; font-size: 15px; line-height: 1.4; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-        .message .sender { font-size: 11px; font-weight: bold; margin-bottom: 3px; display: block; }
-        
-        /* Свои сообщения (справа) */
-        .message.sent { background: #dcf8c6; align-self: flex-end; border-top-right-radius: 0; }
-        .message.sent .sender { color: #4f7c2a; }
-        
-        /* Чужие сообщения (слева) */
-        .message.received { background: #ffffff; align-self: flex-start; border-top-left-radius: 0; }
-        .message.received .sender { color: #128c7e; }
-        
-        .input-area { display: flex; padding: 10px; background: #f0f0f0; gap: 8px; align-items: center; }
-        .input-area input { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 25px; outline: none; font-size: 15px; }
-        .input-area button { background: #075e54; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; justify-content: center; align-items: center; }
-        .input-area button:hover { background: #128c7e; }
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #0d1117;
+            color: white;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+
+        .header {
+            height: 65px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .online {
+            margin-left: 15px;
+            color: #3fb950;
+            font-size: 14px;
+        }
+
+        /* CHAT */
+
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            max-width: 700px;
+        }
+
+        .username {
+            font-size: 13px;
+            color: #8b949e;
+            margin-bottom: 4px;
+        }
+
+        .bubble {
+            display: inline-block;
+            background: #21262d;
+            padding: 11px 15px;
+            border-radius: 12px;
+            word-break: break-word;
+        }
+
+        .my-message {
+            text-align: right;
+            margin-left: auto;
+        }
+
+        .my-message .bubble {
+            background: #238636;
+        }
+
+        .system {
+            text-align: center;
+            color: #8b949e;
+            font-size: 13px;
+            margin: 15px;
+        }
+
+        /* INPUT */
+
+        .input-area {
+            padding: 15px;
+            background: #161b22;
+            border-top: 1px solid #30363d;
+            display: flex;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: white;
+            padding: 14px;
+            border-radius: 10px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        #messageInput:focus {
+            border-color: #58a6ff;
+        }
+
+        #sendButton {
+            background: #238636;
+            border: none;
+            color: white;
+            padding: 0 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        #sendButton:hover {
+            background: #2ea043;
+        }
+
+        /* LOGIN */
+
+        #login {
+            position: fixed;
+            inset: 0;
+            background: #0d1117;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .login-box {
+            width: 350px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .login-box h1 {
+            margin-top: 0;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 13px;
+            margin: 10px 0;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: white;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 13px;
+            background: #238636;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .status {
+            font-size: 13px;
+            color: #8b949e;
+            margin-top: 10px;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="chat-container">
-    <div class="chat-header">
-        💬 Глобальный Чат PieSocket
-        <span class="status" id="status">Подключение к сети...</span>
+<!-- LOGIN -->
+
+<div id="login">
+
+    <div class="login-box">
+
+        <h1>🌎 Global Chat</h1>
+
+        <p>Введите своё имя</p>
+
+        <input
+            id="usernameInput"
+            type="text"
+            maxlength="20"
+            placeholder="Например: Haiinted"
+        >
+
+        <button onclick="joinChat()">
+            Войти в чат
+        </button>
+
+        <div class="status" id="loginStatus"></div>
+
     </div>
-    <div class="messages-box" id="messagesBox"></div>
-    <div class="input-area">
-        <input type="text" id="messageInput" placeholder="Напишите сообщение..." autocomplete="off">
-        <button id="sendBtn">➤</button>
-    </div>
+
 </div>
 
+
+<!-- CHAT -->
+
+<div class="app">
+
+    <div class="header">
+
+        <div class="logo">
+            🌎 Global Chat
+        </div>
+
+        <div class="online" id="connectionStatus">
+            ● Подключение...
+        </div>
+
+    </div>
+
+
+    <div id="messages"></div>
+
+
+    <form class="input-area" onsubmit="sendMessage(event)">
+
+        <input
+            id="messageInput"
+            type="text"
+            maxlength="500"
+            autocomplete="off"
+            placeholder="Написать сообщение..."
+        >
+
+        <button id="sendButton">
+            Отправить
+        </button>
+
+    </form>
+
+</div>
+
+
 <script>
-    // 1. Создаем случайное имя пользователя во вкладке
-    if (!sessionStorage.getItem('chatUser')) {
-        sessionStorage.setItem('chatUser', "Юзер_" + Math.floor(Math.random() * 1000));
-    }
-    const myName = sessionStorage.getItem('chatUser');
 
-    const messagesBox = document.getElementById('messagesBox');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const statusText = document.getElementById('status');
+    /*
+        ============================
+        PIE SOCKET CONFIG
+        ============================
+    */
 
-    // 2. Ваши личные данные из панели PieSocket
-    const clusterId = 'free.blr2';
-    const apiKey = 'z6wytuVGQjVrMXNRFhqw70mWppXB0kwq2amiuCmF';
-    const apiId = '24633'; // Ваш API ID из поля "API ID (For pusher sdks)"
+    const CLUSTER_ID = "free.blr2";
 
-    // Подключаемся напрямую через WebSocket URL вашего аккаунта
-    const socket = new WebSocket(`wss://${clusterId}://{apiId}?api_key=${apiKey}&notify_self=1`);
+    const API_KEY = "z6wytuVGQjVrMXNRFhqw7OmWppXB0kwq2amiuCmF";
 
-    // Отслеживаем успешное подключение
-    socket.onopen = function() {
-        statusText.innerText = `В сети как: ${myName}`;
-        statusText.style.color = '#a3ffb4';
-        console.log("Успешно подключено к вашему PieSocket!");
-    };
+    // Одна комната для всех пользователей
+    const ROOM_ID = "global-chat";
 
-    // Если соединение закрылось
-    socket.onclose = function() {
-        statusText.innerText = "Соединение разорвано. Перезагрузите страницу.";
-        statusText.style.color = '#ff9e9e';
-    };
 
-    // Защита от опасных тегов (XSS)
-    function escapeHTML(str) {
-        return str.replace(/[&<>'"]/g, 
-            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-        );
-    }
+    /*
+        ============================
+        VARIABLES
+        ============================
+    */
 
-    // 3. ПРИЕМ СООБЩЕНИЙ
-    socket.onmessage = function(event) {
-        try {
-            const data = JSON.parse(event.data);
-            
-            // Защита от технических пингов сервера
-            if (!data || !data.sender || !data.text) return;
+    let socket = null;
 
-            const type = (data.sender === myName) ? 'sent' : 'received';
-            displayMessage(data.sender, data.text, type);
-        } catch (e) {
-            // Игнорируем фоновые сервисные сообщения
-        }
-    };
+    let username = "";
 
-    function displayMessage(senderName, text, type) {
-        const msgDiv = document.createElement('div');
-        msgDiv.classList.add('message', type);
-        
-        const safeSender = escapeHTML(senderName);
-        const safeText = escapeHTML(text);
-        
-        msgDiv.innerHTML = `<span class="sender">${safeSender}</span>${safeText}`;
-        messagesBox.appendChild(msgDiv);
-        messagesBox.scrollTop = messagesBox.scrollHeight; 
-    }
 
-    // 4. ОТПРАВКА СООБЩЕНИЯ
-    function sendMessage() {
-        const text = messageInput.value.trim();
-        if (text === '') return;
 
-        if (socket.readyState !== WebSocket.OPEN) {
-            alert("Нет подключения к сети! Подождите.");
+    /*
+        ============================
+        LOGIN
+        ============================
+    */
+
+    function joinChat() {
+
+        const input =
+            document.getElementById("usernameInput");
+
+        username = input.value.trim();
+
+        if (!username) {
+
+            document.getElementById("loginStatus").textContent =
+                "Введите имя";
+
             return;
         }
 
-        const messagePayload = {
-            sender: myName,
-            text: text
-        };
+        // Сохраняем имя
+        localStorage.setItem(
+            "globalChatUsername",
+            username
+        );
 
-        // Отправляем структурированный JSON прямо в сокет
-        socket.send(JSON.stringify(messagePayload));
-        messageInput.value = '';
+        // Убираем окно входа
+        document.getElementById("login").style.display =
+            "none";
+
+        connect();
     }
 
-    sendBtn.addEventListener('click', sendMessage);
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+
+
+    /*
+        ============================
+        CONNECT TO PIESOCKET
+        ============================
+    */
+
+    function connect() {
+
+        const url =
+            `wss://${CLUSTER_ID}.piesocket.com/v3/${ROOM_ID}?api_key=${API_KEY}&notify_self=1`;
+
+        socket = new WebSocket(url);
+
+
+        /*
+            CONNECTED
+        */
+
+        socket.onopen = function() {
+
+            document.getElementById(
+                "connectionStatus"
+            ).textContent = "● Онлайн";
+
+            document.getElementById(
+                "connectionStatus"
+            ).style.color = "#3fb950";
+
+            addSystemMessage(
+                "Вы подключились к глобальному чату"
+            );
+        };
+
+
+        /*
+            MESSAGE RECEIVED
+        */
+
+        socket.onmessage = function(event) {
+
+            try {
+
+                const data =
+                    JSON.parse(event.data);
+
+                console.log(
+                    "Получено:",
+                    data
+                );
+
+
+                /*
+                    PieSocket может вернуть
+                    служебные сообщения.
+                */
+
+                if (
+                    data.event === "new_message"
+                ) {
+
+                    showMessage(
+                        data.sender,
+                        data.text
+                    );
+
+                }
+
+                else if (
+                    data.event === "new_joining"
+                ) {
+
+                    addSystemMessage(
+                        data.sender +
+                        " вошёл в чат"
+                    );
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Не удалось обработать сообщение:",
+                    event.data
+                );
+
+            }
+
+        };
+
+
+        /*
+            DISCONNECTED
+        */
+
+        socket.onclose = function() {
+
+            document.getElementById(
+                "connectionStatus"
+            ).textContent = "● Отключено";
+
+            document.getElementById(
+                "connectionStatus"
+            ).style.color = "#f85149";
+
+            addSystemMessage(
+                "Соединение потеряно. Переподключение..."
+            );
+
+            setTimeout(connect, 3000);
+        };
+
+
+        /*
+            ERROR
+        */
+
+        socket.onerror = function(error) {
+
+            console.log(
+                "WebSocket error:",
+                error
+            );
+
+        };
+
+    }
+
+
+
+    /*
+        ============================
+        SEND MESSAGE
+        ============================
+    */
+
+    function sendMessage(event) {
+
+        event.preventDefault();
+
+        const input =
+            document.getElementById(
+                "messageInput"
+            );
+
+        const text =
+            input.value.trim();
+
+
+        if (!text)
+            return;
+
+
+        if (
+            !socket ||
+            socket.readyState !== WebSocket.OPEN
+        ) {
+
+            alert(
+                "Нет соединения с сервером"
+            );
+
+            return;
+        }
+
+
+        /*
+            Отправляем JSON
+        */
+
+        socket.send(
+            JSON.stringify({
+
+                event: "new_message",
+
+                sender: username,
+
+                text: text
+
+            })
+        );
+
+
+        input.value = "";
+
+        input.focus();
+
+    }
+
+
+
+    /*
+        ============================
+        SHOW MESSAGE
+        ============================
+    */
+
+    function showMessage(sender, text) {
+
+        const container =
+            document.getElementById(
+                "messages"
+            );
+
+
+        const message =
+            document.createElement(
+                "div"
+            );
+
+        message.className =
+            "message";
+
+
+        if (sender === username) {
+
+            message.classList.add(
+                "my-message"
+            );
+
+        }
+
+
+        const name =
+            document.createElement(
+                "div"
+            );
+
+        name.className =
+            "username";
+
+        name.textContent =
+            sender;
+
+
+        const bubble =
+            document.createElement(
+                "div"
+            );
+
+        bubble.className =
+            "bubble";
+
+        // textContent защищает от HTML/JS-инъекций
+        bubble.textContent =
+            text;
+
+
+        message.appendChild(name);
+
+        message.appendChild(bubble);
+
+        container.appendChild(message);
+
+
+        // Прокрутка вниз
+        container.scrollTop =
+            container.scrollHeight;
+
+    }
+
+
+
+    /*
+        ============================
+        SYSTEM MESSAGE
+        ============================
+    */
+
+    function addSystemMessage(text) {
+
+        const container =
+            document.getElementById(
+                "messages"
+            );
+
+
+        const message =
+            document.createElement(
+                "div"
+            );
+
+        message.className =
+            "system";
+
+        message.textContent =
+            text;
+
+
+        container.appendChild(
+            message
+        );
+
+
+        container.scrollTop =
+            container.scrollHeight;
+
+    }
+
+
+
+    /*
+        ============================
+        LOAD SAVED USERNAME
+        ============================
+    */
+
+    const savedUsername =
+        localStorage.getItem(
+            "globalChatUsername"
+        );
+
+
+    if (savedUsername) {
+
+        document.getElementById(
+            "usernameInput"
+        ).value =
+            savedUsername;
+
+    }
+
 </script>
 
 </body>
